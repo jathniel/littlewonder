@@ -1,17 +1,16 @@
-//
-//  little_WonderApp.swift
-//  little Wonder
-//
-//  Created by Jathniel Argueza on 5/4/26.
-//
-
 import SwiftUI
 
 @main
 struct little_WonderApp: App {
+    @State private var themeSettings = ThemeSettings()
+    @State private var profileStore = ProfileStore()
+
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            RootView()
+                .environment(themeSettings)
+                .environment(profileStore)
+                .themed(from: themeSettings)
         }
     }
 }
