@@ -19,14 +19,14 @@ struct WelcomeView: View {
                     .foregroundStyle(palette.inkSoft)
                     .padding(.bottom, Spacing.md + 2)
 
-                Text(.init("welcomeHeadline"))
+                Text("welcomeHeadline")
                     .font(.system(.largeTitle, design: .serif))
                     .kerning(-2.5)
                     .lineSpacing(-4)
                     .foregroundStyle(palette.ink)
                     .frame(maxWidth: 560, alignment: .leading)
 
-                Text(.init("welcomeBlurb"))
+                Text("welcomeBlurb")
                     .font(.system(.title3, design: .rounded).weight(.medium))
                     .foregroundStyle(palette.inkSoft)
                     .lineSpacing(4)

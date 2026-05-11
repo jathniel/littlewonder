@@ -14,9 +14,9 @@ struct LockedDoorTileWide<Art: View>: View {
     var body: some View {
         Button(action: action) {
             HStack(spacing: 0) {
-                artPanel
-                textPanel
-                chipPanel
+                LockedDoorTileWideArtPanel(accent: accent, art: art)
+                LockedDoorTileWideTextPanel(kicker: kicker, label: label, blurb: blurb)
+                LockedDoorTileWideChipPanel(price: price)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(palette.sand)
@@ -28,8 +28,15 @@ struct LockedDoorTileWide<Art: View>: View {
         }
         .buttonStyle(.plain)
     }
+}
 
-    private var artPanel: some View {
+private struct LockedDoorTileWideArtPanel<Art: View>: View {
+    let accent: KeyPath<Palette, Color>
+    @ViewBuilder var art: () -> Art
+
+    @Environment(\.palette) private var palette
+
+    var body: some View {
         ZStack {
             Circle()
                 .fill(palette[keyPath: accent].opacity(0.14))
@@ -54,8 +61,16 @@ struct LockedDoorTileWide<Art: View>: View {
                 }
         }
     }
+}
 
-    private var textPanel: some View {
+private struct LockedDoorTileWideTextPanel: View {
+    let kicker: LocalizedStringKey
+    let label: LocalizedStringKey
+    let blurb: LocalizedStringKey
+
+    @Environment(\.palette) private var palette
+
+    var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(kicker)
                 .font(FontStack.mono)
@@ -74,8 +89,14 @@ struct LockedDoorTileWide<Art: View>: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
         .padding(.horizontal, 26)
     }
+}
 
-    private var chipPanel: some View {
+private struct LockedDoorTileWideChipPanel: View {
+    let price: LocalizedStringKey
+
+    @Environment(\.palette) private var palette
+
+    var body: some View {
         VStack(alignment: .trailing, spacing: 8) {
             LockPriceChip(price: price)
             Text("lockedDoorTileSoon")

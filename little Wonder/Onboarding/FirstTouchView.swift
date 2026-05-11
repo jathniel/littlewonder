@@ -102,18 +102,35 @@ private struct FirstTouchStage: View {
     @Binding var nudgePhase: CGFloat
     let onSnapComplete: () -> Void
 
+    var body: some View {
+        HStack(spacing: gap) {
+            FirstTouchDraggable(
+                pieceSize: pieceSize,
+                snapDeltaX: snapDeltaX,
+                dragOffset: $dragOffset,
+                isPlaced: $isPlaced,
+                nudgePhase: $nudgePhase,
+                onSnapComplete: onSnapComplete
+            )
+            FirstTouchOutline(outlineSize: outlineSize, isPlaced: isPlaced)
+        }
+    }
+}
+
+private struct FirstTouchDraggable: View {
+    let pieceSize: CGFloat
+    let snapDeltaX: CGFloat
+
+    @Binding var dragOffset: CGSize
+    @Binding var isPlaced: Bool
+    @Binding var nudgePhase: CGFloat
+    let onSnapComplete: () -> Void
+
     @Environment(\.palette) private var palette
     @Environment(\.pace) private var pace
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        HStack(spacing: gap) {
-            draggable
-            outline
-        }
-    }
-
-    private var draggable: some View {
         let offsetX: CGFloat = {
             if isPlaced { return snapDeltaX }
             if dragOffset == .zero { return nudgePhase }
@@ -121,7 +138,7 @@ private struct FirstTouchStage: View {
         }()
         let offsetY: CGFloat = isPlaced ? 0 : dragOffset.height
 
-        return PrimitiveShape(kind: .circle, size: pieceSize, fill: palette.terracotta)
+        PrimitiveShape(kind: .circle, size: pieceSize, fill: palette.terracotta)
             .offset(x: offsetX, y: offsetY)
             .gesture(dragGesture)
             .onAppear {
@@ -139,21 +156,6 @@ private struct FirstTouchStage: View {
                 }
                 onSnapComplete()
             }
-    }
-
-    private var outline: some View {
-        ZStack {
-            Circle()
-                .strokeBorder(palette.line, style: StrokeStyle(lineWidth: 3, dash: [8, 6]))
-                .frame(width: outlineSize, height: outlineSize)
-            Circle()
-                .stroke(palette.shapes, lineWidth: 2)
-                .frame(width: outlineSize + 20, height: outlineSize + 20)
-                .opacity(0.6)
-        }
-        .opacity(isPlaced ? 0 : 1)
-        .animation(pace.fastAnimation, value: isPlaced)
-        .accessibilityHidden(true)
     }
 
     private var dragGesture: some Gesture {
@@ -179,5 +181,28 @@ private struct FirstTouchStage: View {
                     }
                 }
             }
+    }
+}
+
+private struct FirstTouchOutline: View {
+    let outlineSize: CGFloat
+    let isPlaced: Bool
+
+    @Environment(\.palette) private var palette
+    @Environment(\.pace) private var pace
+
+    var body: some View {
+        ZStack {
+            Circle()
+                .strokeBorder(palette.line, style: StrokeStyle(lineWidth: 3, dash: [8, 6]))
+                .frame(width: outlineSize, height: outlineSize)
+            Circle()
+                .stroke(palette.shapes, lineWidth: 2)
+                .frame(width: outlineSize + 20, height: outlineSize + 20)
+                .opacity(0.6)
+        }
+        .opacity(isPlaced ? 0 : 1)
+        .animation(pace.fastAnimation, value: isPlaced)
+        .accessibilityHidden(true)
     }
 }

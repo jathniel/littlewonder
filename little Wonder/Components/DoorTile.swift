@@ -8,16 +8,30 @@ struct DoorTile<Art: View>: View {
     @ViewBuilder var art: () -> Art
     let action: () -> Void
 
-    @Environment(\.palette) private var palette
-
     var body: some View {
         Button(action: action) {
-            tileContents
+            DoorTileContents(
+                kicker: kicker,
+                label: label,
+                accent: accent,
+                size: size,
+                art: art
+            )
         }
         .buttonStyle(.plain)
     }
+}
 
-    private var tileContents: some View {
+private struct DoorTileContents<Art: View>: View {
+    let kicker: LocalizedStringKey
+    let label: LocalizedStringKey
+    let accent: KeyPath<Palette, Color>
+    let size: CGFloat
+    @ViewBuilder var art: () -> Art
+
+    @Environment(\.palette) private var palette
+
+    var body: some View {
         ZStack {
             palette.paperHi
 

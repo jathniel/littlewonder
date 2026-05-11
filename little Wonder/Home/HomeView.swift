@@ -21,8 +21,10 @@ struct HomeView: View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: Spacing.lg) {
                         HomeHeader(name: profile.displayName)
-                        unlockedGrid
-                        lockedSection
+                        HomeUnlockedGrid(topics: unlocked, path: $path)
+                        HomeLockedSection(topics: locked) {
+                            isSettingsPresented = true
+                        }
                     }
                     .padding(.horizontal, Spacing.xxl - 8)
                     .padding(.top, 80)
@@ -40,16 +42,43 @@ struct HomeView: View {
             ThemeSettingsView()
         }
     }
+}
 
-    private var unlockedGrid: some View {
+private struct LockedTopic: Identifiable {
+    let topic: TopicID
+    let kicker: LocalizedStringKey
+    let price: LocalizedStringKey
+    let blurb: LocalizedStringKey
+
+    var id: TopicID { topic }
+}
+
+private extension TopicID {
+    var labelKey: LocalizedStringKey {
+        switch self {
+        case .shapes:   "topicShapes"
+        case .numbers:  "topicNumbers"
+        case .animals:  "topicAnimals"
+        case .colors:   "topicColors"
+        case .letters:  "topicLetters"
+        case .feelings: "topicFeelings"
+        }
+    }
+}
+
+private struct HomeUnlockedGrid: View {
+    let topics: [TopicID]
+    @Binding var path: NavigationPath
+
+    var body: some View {
         LazyVGrid(columns: [
             GridItem(.flexible(), spacing: Spacing.lg - 4),
             GridItem(.flexible(), spacing: Spacing.lg - 4),
         ], spacing: Spacing.lg - 4) {
-            ForEach(unlocked.enumerated(), id: \.element) { index, topic in
+            ForEach(topics.enumerated(), id: \.element.id) { index, topic in
                 DoorTile(
                     kicker: kicker(for: index),
-                    label: label(for: topic),
+                    label: topic.labelKey,
                     accent: topic.accent,
                     size: 300
                 ) {
@@ -61,7 +90,23 @@ struct HomeView: View {
         }
     }
 
-    private var lockedSection: some View {
+    private func kicker(for index: Int) -> LocalizedStringKey {
+        switch index {
+        case 0: "topicKicker01"
+        case 1: "topicKicker02"
+        case 2: "topicKicker03"
+        default: "topicKicker04"
+        }
+    }
+}
+
+private struct HomeLockedSection: View {
+    let topics: [LockedTopic]
+    let onLockedTap: () -> Void
+
+    @Environment(\.palette) private var palette
+
+    var body: some View {
         VStack(alignment: .leading, spacing: Spacing.md - 4) {
             HStack(alignment: .firstTextBaseline) {
                 Text("homeLockedHeader")
@@ -79,50 +124,21 @@ struct HomeView: View {
                 GridItem(.flexible(), spacing: Spacing.md),
                 GridItem(.flexible(), spacing: Spacing.md),
             ], spacing: Spacing.md) {
-                ForEach(locked) { item in
+                ForEach(topics) { item in
                     LockedDoorTile(
                         kicker: item.kicker,
-                        label: label(for: item.topic),
+                        label: item.topic.labelKey,
                         price: item.price,
                         accent: item.topic.accent
                     ) {
                         HomeArt(topic: item.topic)
                     } action: {
-                        isSettingsPresented = true
+                        onLockedTap()
                     }
                 }
             }
         }
     }
-
-    private func kicker(for index: Int) -> LocalizedStringKey {
-        switch index {
-        case 0: "topicKicker01"
-        case 1: "topicKicker02"
-        case 2: "topicKicker03"
-        default: "topicKicker04"
-        }
-    }
-
-    private func label(for topic: TopicID) -> LocalizedStringKey {
-        switch topic {
-        case .shapes:   "topicShapes"
-        case .numbers:  "topicNumbers"
-        case .animals:  "topicAnimals"
-        case .colors:   "topicColors"
-        case .letters:  "topicLetters"
-        case .feelings: "topicFeelings"
-        }
-    }
-}
-
-private struct LockedTopic: Identifiable {
-    let topic: TopicID
-    let kicker: LocalizedStringKey
-    let price: LocalizedStringKey
-    let blurb: LocalizedStringKey
-
-    var id: TopicID { topic }
 }
 
 private struct HomeHeader: View {

@@ -73,6 +73,7 @@ private struct PaletteCard: View {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundStyle(palette.ink)
                         .font(.title3)
+                        .accessibilityHidden(true)
                 }
             }
             .padding(Spacing.md)
@@ -83,6 +84,7 @@ private struct PaletteCard: View {
             }
         }
         .buttonStyle(.plain)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 
     private var label: LocalizedStringKey {
@@ -174,6 +176,7 @@ private struct PaceCard: View {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundStyle(palette.ink)
                         .font(.title3)
+                        .accessibilityHidden(true)
                 }
             }
             .padding(Spacing.md)
@@ -184,6 +187,7 @@ private struct PaceCard: View {
             }
         }
         .buttonStyle(.plain)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 
     private var icon: String {

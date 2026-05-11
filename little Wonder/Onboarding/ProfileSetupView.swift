@@ -225,20 +225,24 @@ private struct ProfileFieldAvatarRow: View {
     @Binding var avatarShape: ShapeKind
     @Binding var avatarColor: AvatarColor
 
+    var body: some View {
+        ProfileField(label: "profileFieldAvatar", hint: "profileFieldAvatarHint") {
+            HStack(spacing: Spacing.md + 2) {
+                ProfileAvatarShapesCard(avatarShape: $avatarShape)
+                ProfileAvatarColorsCard(avatarColor: $avatarColor)
+            }
+        }
+    }
+}
+
+private struct ProfileAvatarShapesCard: View {
+    @Binding var avatarShape: ShapeKind
+
     @Environment(\.palette) private var palette
 
     private let shapes: [ShapeKind] = [.circle, .square, .triangle, .hexagon, .star]
 
     var body: some View {
-        ProfileField(label: "profileFieldAvatar", hint: "profileFieldAvatarHint") {
-            HStack(spacing: Spacing.md + 2) {
-                shapesCard
-                colorsCard
-            }
-        }
-    }
-
-    private var shapesCard: some View {
         HStack(spacing: Spacing.sm) {
             ForEach(shapes, id: \.self) { shape in
                 Button {
@@ -266,8 +270,14 @@ private struct ProfileFieldAvatarRow: View {
                 .stroke(palette.line, lineWidth: 1.5)
         }
     }
+}
 
-    private var colorsCard: some View {
+private struct ProfileAvatarColorsCard: View {
+    @Binding var avatarColor: AvatarColor
+
+    @Environment(\.palette) private var palette
+
+    var body: some View {
         HStack(spacing: Spacing.sm) {
             ForEach(AvatarColor.allCases) { color in
                 Button {
