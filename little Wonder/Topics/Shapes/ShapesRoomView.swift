@@ -5,27 +5,85 @@ struct ShapesRoomView: View {
 
     @Environment(\.palette) private var palette
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.horizontalSizeClass) private var hSize
+    @State private var isPortrait = UIDevice.current.orientation.isPortrait
+
     @State private var progress = ShapeProgressStore()
 
     private let activities: [ShapeActivityID] = [.match, .sort, .trace, .build, .freePlay]
+
+    private var isCompactWidth: Bool { hSize == .compact }
 
     var body: some View {
         ZStack {
             palette.paper.ignoresSafeArea()
 
-            HStack(alignment: .top, spacing: 32) {
-                ShapesRoomRail(progress: progress, onBack: { dismiss() })
-                    .frame(width: 360)
-                ShapesRoomGrid(activities: activities) { activity in
+            if isPortrait || isCompactWidth {
+                compactBody
+            } else {
+                regularBody
+            }
+        }
+        .navigationBarBackButtonHidden()
+    }
+
+    private var regularBody: some View {
+        HStack(alignment: .top, spacing: Spacing.lg) {
+            ShapesRoomRail(progress: progress, onBack: { dismiss() })
+                .frame(maxWidth: 360, alignment: .topLeading)
+            ShapesRoomGrid(activities: activities, isCompactWidth: false) { activity in
+                path.append(activity)
+            }
+        }
+        .padding(.horizontal, Spacing.xl)
+        .padding(.top, Spacing.xl + Spacing.lg)
+        .padding(.bottom, Spacing.xl)
+    }
+
+    private var compactBody: some View {
+        ScrollView {
+            VStack(alignment: .center, spacing: Spacing.lg) {
+                compactToolbar
+                compactHero
+                ShapesRoomGrid(activities: activities, isCompactWidth: true) { activity in
                     path.append(activity)
                 }
             }
-            .padding(.leading, 56)
-            .padding(.trailing, 56)
-            .padding(.top, 80)
-            .padding(.bottom, 56)
+            .padding(.horizontal, Spacing.lg)
+            .padding(.top, Spacing.lg)
+            .padding(.bottom, Spacing.xl)
         }
-        .navigationBarBackButtonHidden()
+        .scrollIndicators(.hidden)
+    }
+
+    private var compactToolbar: some View {
+        HStack(spacing: Spacing.md) {
+            RoundIconButton(label: "topicPlaceholderBack", systemImage: "chevron.left", size: 48) { dismiss() }
+            TopicBadge(label: "topicShapes", accent: \Palette.shapes)
+            Spacer(minLength: Spacing.md)
+            RoundIconButton(label: "audioToggle", systemImage: "speaker.wave.2.fill", size: 48) { }
+            RoundIconButton(label: "shapeRoomFavoritesButton", systemImage: "target", size: 48) { }
+        }
+    }
+
+    private var compactHero: some View {
+        HStack(alignment: .top, spacing: Spacing.lg) {
+            VStack(alignment: .leading, spacing: Spacing.sm) {
+                Text("shapeRoomTitle")
+                    .font(.system(.largeTitle, design: .serif))
+                    .kerning(-1.2)
+                    .foregroundStyle(palette.ink)
+                    .fixedSize(horizontal: false, vertical: true)
+                Text("shapeRoomBlurb")
+                    .font(.system(.callout, design: .rounded).weight(.medium))
+                    .foregroundStyle(palette.inkSoft)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .frame(maxWidth: .infinity, alignment: .topLeading)
+
+            ShapesRoomWeeklyCard(progress: progress)
+                .frame(maxWidth: .infinity)
+        }
     }
 }
 
@@ -62,7 +120,7 @@ private struct ShapesRoomRail: View {
                 RoundIconButton(label: "shapeRoomFavoritesButton", systemImage: "target", size: 48) { }
             }
         }
-        .frame(maxHeight: .infinity, alignment: .topLeading)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 }
 
@@ -97,7 +155,7 @@ private struct ShapesRoomWeeklyCard: View {
                 }
             }
         }
-        .padding(22)
+        .padding(Spacing.lg - 2)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(palette.paperHi, in: .rect(cornerRadius: 22, style: .continuous))
         .overlay {
@@ -109,28 +167,40 @@ private struct ShapesRoomWeeklyCard: View {
 
 private struct ShapesRoomGrid: View {
     let activities: [ShapeActivityID]
+    let isCompactWidth: Bool
     let onSelect: (ShapeActivityID) -> Void
 
-    private let columns: [GridItem] = Array(
-        repeating: GridItem(.flexible(), spacing: 18),
-        count: 3
-    )
+    private var columnCount: Int { isCompactWidth ? 2 : 3 }
+
+    private var columns: [GridItem] {
+        Array(repeating: GridItem(.flexible(), spacing: Spacing.md), count: columnCount)
+    }
+
+    private var standardTiles: [ShapeActivityID] { activities.filter { !$0.isWide } }
+    private var wideTiles: [ShapeActivityID] { activities.filter(\.isWide) }
+
+    /// Larger than the original 230pt so tiles read as friendly tap targets for young kids.
+    private let tileHeight: CGFloat = 260
 
     var body: some View {
-        LazyVGrid(columns: columns, spacing: 18) {
-            ForEach(activities.filter { !$0.isWide }) { activity in
+        LazyVGrid(columns: columns, spacing: Spacing.md) {
+            ForEach(standardTiles) { activity in
                 ShapesRoomTile(activity: activity, onSelect: onSelect)
-                    .frame(height: 230)
+                    .frame(height: tileHeight)
             }
 
-            // Free play spans columns 2-3 on the second row;
-            // leave the first cell of row 2 empty by inserting an empty colored block.
-            Color.clear
-                .frame(height: 230)
+            // In regular width (3 columns) the wide free-play tile spans columns 2–3,
+            // so insert an empty cell to keep the first column aligned. In compact
+            // width (2 columns) the four standard tiles fill rows 1–2 exactly and
+            // the wide tile lands on its own row — no spacer needed.
+            if !isCompactWidth {
+                Color.clear
+                    .frame(height: tileHeight)
+            }
 
-            ForEach(activities.filter(\.isWide)) { activity in
+            ForEach(wideTiles) { activity in
                 ShapesRoomTile(activity: activity, onSelect: onSelect)
-                    .frame(height: 230)
+                    .frame(height: tileHeight)
                     .gridCellColumns(2)
             }
         }
@@ -172,6 +242,11 @@ private struct ShapesRoomTile: View {
 
 #Preview("Shape Room — cool") {
     ShapesRoomPreviewHarness(palette: .cool)
+}
+
+#Preview("Shape Room — compact width") {
+    ShapesRoomPreviewHarness(palette: .warm)
+        .environment(\.horizontalSizeClass, .compact)
 }
 
 private struct ShapesRoomPreviewHarness: View {
