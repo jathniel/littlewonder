@@ -14,7 +14,21 @@ struct RootView: View {
                 }
             }
             .navigationDestination(for: TopicID.self) { topic in
-                TopicPlaceholderView(topic: topic)
+                switch topic {
+                case .shapes:
+                    ShapesRoomView(path: $path)
+                default:
+                    TopicPlaceholderView(topic: topic)
+                }
+            }
+            .navigationDestination(for: ShapeActivityID.self) { activity in
+                switch activity {
+                case .match:    ShapeMatchView()
+                case .sort:     ShapeSortView()
+                case .trace:    ShapeTraceView()
+                case .build:    ShapeBuildView()
+                case .freePlay: ShapeFreePlayView()
+                }
             }
         }
     }
