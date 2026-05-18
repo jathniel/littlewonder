@@ -1,0 +1,146 @@
+import SwiftUI
+
+struct ShapeMatchView: View {
+    @Environment(\.palette) private var palette
+    @Environment(\.pace) private var pace
+    @Environment(\.dismiss) private var dismiss
+    @State private var viewModel = ShapeMatchViewModel()
+
+    var body: some View {
+        ActivityStage(
+            kicker: "shapeMatchKicker",
+            title: "shapeMatchTitle",
+            prompt: "shapeMatchPrompt",
+            progress: AnyView(ProgressDots(count: viewModel.total, active: viewModel.placedCount)),
+            onClose: { dismiss() },
+            onReset: { viewModel.reset() },
+            onSpeak: { /* TODO: wire AVSpeechSynthesizer */ }
+        ) {
+            VStack(spacing: Spacing.md + 4) {
+                ShapeMatchCanvas(viewModel: viewModel)
+                ShapeMatchTray(viewModel: viewModel)
+            }
+            .overlay(alignment: .top) {
+                if viewModel.celebrate {
+                    Text("shapeMatchCelebration")
+                        .font(.system(.headline, design: .serif).italic())
+                        .padding(.horizontal, 22)
+                        .padding(.vertical, 12)
+                        .background(palette.paperHi, in: .capsule)
+                        .overlay { Capsule().stroke(palette.line, lineWidth: 1) }
+                        .foregroundStyle(palette.ink)
+                        .transition(.scale.combined(with: .opacity))
+                        .padding(.top, Spacing.md)
+                }
+            }
+            .animation(pace.longAnimation, value: viewModel.celebrate)
+        }
+    }
+}
+
+private struct ShapeMatchCanvas: View {
+    let viewModel: ShapeMatchViewModel
+
+    @Environment(\.palette) private var palette
+    @Environment(\.pace) private var pace
+
+    var body: some View {
+        let logical = ShapeMatchViewModel.canvasSize
+        GeometryReader { proxy in
+            let scale = min(proxy.size.width / logical.width, proxy.size.height / logical.height)
+            ZStack(alignment: .topLeading) {
+                ForEach(viewModel.pieces) { piece in
+                    outline(for: piece)
+                        .position(piece.target)
+                }
+                ForEach(viewModel.pieces) { piece in
+                    pieceView(piece)
+                        .position(piece.position)
+                }
+            }
+            .frame(width: logical.width, height: logical.height)
+            .scaleEffect(scale, anchor: .topLeading)
+            .frame(width: logical.width * scale, height: logical.height * scale, alignment: .topLeading)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+            .animation(pace.baseAnimation, value: viewModel.placedCount)
+            .coordinateSpace(name: "matchStage")
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    private func outline(for piece: ShapeMatchViewModel.Piece) -> some View {
+        PrimitiveShape(kind: piece.kind, size: ShapeMatchViewModel.pieceSize, stroke: palette.line, strokeWidth: 3)
+            .opacity(piece.placed ? 0 : 1)
+            .animation(pace.fastAnimation, value: piece.placed)
+            .accessibilityHidden(true)
+    }
+
+    @ViewBuilder
+    private func pieceView(_ piece: ShapeMatchViewModel.Piece) -> some View {
+        ShapeMatchPiece(piece: piece, viewModel: viewModel)
+    }
+}
+
+private struct ShapeMatchPiece: View {
+    let piece: ShapeMatchViewModel.Piece
+    let viewModel: ShapeMatchViewModel
+
+    @Environment(\.palette) private var palette
+    @Environment(\.pace) private var pace
+    @State private var isDragging = false
+
+    var body: some View {
+        PrimitiveShape(kind: piece.kind, size: ShapeMatchViewModel.pieceSize, fill: palette[keyPath: piece.color])
+            .scaleEffect(isDragging ? 1.05 : 1)
+            .shadow(color: palette.ink.opacity(isDragging ? 0.18 : 0.06),
+                    radius: isDragging ? 18 : 6,
+                    y: isDragging ? 10 : 2)
+            .gesture(dragGesture)
+            .animation(pace.baseAnimation, value: piece.position)
+            .animation(pace.fastAnimation, value: isDragging)
+            .accessibilityLabel(Text("shapeA11y \(piece.kind.rawValue)"))
+            .accessibilityAddTraits(.isButton)
+            .accessibilityValue(piece.placed ? Text("shapeMatchedA11y") : Text("shapePieceDraggingA11y"))
+    }
+
+    private var dragGesture: some Gesture {
+        DragGesture(minimumDistance: 0, coordinateSpace: .named("matchStage"))
+            .onChanged { value in
+                guard !piece.placed else { return }
+                isDragging = true
+                viewModel.updateDrag(piece.id, to: value.location)
+            }
+            .onEnded { _ in
+                isDragging = false
+                _ = viewModel.endDrag(piece.id)
+            }
+    }
+}
+
+private struct ShapeMatchTray: View {
+    let viewModel: ShapeMatchViewModel
+
+    @Environment(\.palette) private var palette
+
+    var body: some View {
+        HStack {
+            Text("shapeTrayLabel")
+                .font(FontStack.mono)
+                .kerning(1.5)
+                .textCase(.uppercase)
+                .foregroundStyle(palette.inkSoft)
+            Spacer()
+            Text("\(viewModel.placedCount) / \(viewModel.total)")
+                .font(.system(.callout, design: .monospaced))
+                .foregroundStyle(palette.inkSoft)
+        }
+        .padding(.horizontal, Spacing.lg)
+        .padding(.vertical, Spacing.md)
+        .frame(maxWidth: .infinity)
+        .background(palette.sand, in: .rect(cornerRadius: 24, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .stroke(palette.line, lineWidth: 1)
+        }
+    }
+}
