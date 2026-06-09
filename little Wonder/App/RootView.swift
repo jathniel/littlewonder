@@ -3,6 +3,9 @@ import SwiftUI
 struct RootView: View {
     @AppStorage("hasOnboarded") private var hasOnboarded = false
     @State private var path = NavigationPath()
+    @State private var shapeProgress = ShapeProgressStore()
+    @State private var numberProgress = NumberProgressStore()
+    @State private var colorProgress = ColorProgressStore()
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -17,6 +20,10 @@ struct RootView: View {
                 switch topic {
                 case .shapes:
                     ShapesRoomView(path: $path)
+                case .numbers:
+                    NumbersRoomView(path: $path)
+                case .colors:
+                    ColorsRoomView(path: $path)
                 default:
                     TopicPlaceholderView(topic: topic)
                 }
@@ -30,6 +37,26 @@ struct RootView: View {
                 case .freePlay: ShapeFreePlayView()
                 }
             }
+            .navigationDestination(for: NumberActivityID.self) { activity in
+                switch activity {
+                case .count:    NumberCountView()
+                case .match:    NumberMatchView()
+                case .order:    NumberOrderView()
+                case .freePlay: NumberFreePlayView()
+                }
+            }
+            .navigationDestination(for: ColorActivityID.self) { activity in
+                switch activity {
+                case .match:    ColorMatchView()
+                case .sort:     ColorSortView()
+                case .find:     ColorFindView()
+                case .mix:      ColorMixView()
+                case .freePlay: ColorFreePlayView()
+                }
+            }
         }
+        .environment(shapeProgress)
+        .environment(numberProgress)
+        .environment(colorProgress)
     }
 }

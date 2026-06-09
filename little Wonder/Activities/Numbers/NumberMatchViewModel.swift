@@ -3,30 +3,31 @@ import Foundation
 import Observation
 import SwiftUI
 
+/// Drag a numeral tile onto the card showing that many dots. Mirrors
+/// `ShapeMatchViewModel`'s drag-snap mechanic, matching on a numeric value.
 @MainActor
 @Observable
-final class ShapeMatchViewModel {
+final class NumberMatchViewModel {
     struct Piece: Identifiable {
         let id: String
-        let kind: ShapeKind
+        let value: Int
         let color: KeyPath<Palette, Color>
-        /// Center of the drop target in stage coordinates.
+        /// Center of the drop target (dot card) in stage coordinates.
         let target: CGPoint
         /// Center of the tray slot the piece starts in.
         let traySlot: CGPoint
-        /// Current center of the piece.
         var position: CGPoint
         var placed: Bool
 
         init(
             id: String,
-            kind: ShapeKind,
+            value: Int,
             color: KeyPath<Palette, Color>,
             target: CGPoint,
             traySlot: CGPoint
         ) {
             self.id = id
-            self.kind = kind
+            self.value = value
             self.color = color
             self.target = target
             self.traySlot = traySlot
@@ -35,21 +36,17 @@ final class ShapeMatchViewModel {
         }
     }
 
-    /// Logical canvas the design uses (1100 × 820); render scaled.
     static let canvasSize = CGSize(width: 1100, height: 820)
     static let pieceSize: CGFloat = 180
     static let snapRadius: CGFloat = 90
 
-    static let eligibleKinds: [ShapeKind] = [
-        .circle, .square, .triangle, .star, .heart, .diamond, .hexagon
-    ]
+    static let eligibleValues: [Int] = [1, 2, 3, 4, 5]
 
     static let paletteOptions: [KeyPath<Palette, Color>] = [
         \Palette.terracotta, \Palette.oak, \Palette.sage,
         \Palette.sky, \Palette.berry, \Palette.plum, \Palette.mustard
     ]
 
-    /// Target anchors arranged so a single 130pt piece never overlaps the next.
     static let targetAnchors: [CGPoint] = [
         CGPoint(x: 240, y: 240),
         CGPoint(x: 540, y: 240),
@@ -61,7 +58,6 @@ final class ShapeMatchViewModel {
     private(set) var celebrate: Bool = false
     private var celebrationTask: Task<Void, Never>?
 
-    /// Fires once when the round transitions from in-progress to complete.
     var onComplete: (() -> Void)?
 
     var placedCount: Int { pieces.lazy.filter(\.placed).count }
@@ -74,7 +70,7 @@ final class ShapeMatchViewModel {
 
     static func randomPieces() -> [Piece] {
         let pieceCount = Int.random(in: 3...4)
-        let kinds = Array(eligibleKinds.shuffled().prefix(pieceCount))
+        let values = Array(eligibleValues.shuffled().prefix(pieceCount))
         let colors = Array(paletteOptions.shuffled().prefix(pieceCount))
         let anchors = Array(targetAnchors.shuffled().prefix(pieceCount))
 
@@ -85,8 +81,8 @@ final class ShapeMatchViewModel {
 
         return (0..<pieceCount).map { idx in
             Piece(
-                id: "\(kinds[idx].rawValue)-\(idx)",
-                kind: kinds[idx],
+                id: "\(values[idx])-\(idx)",
+                value: values[idx],
                 color: colors[idx],
                 target: anchors[idx],
                 traySlot: CGPoint(x: trayStartX + traySpacing * CGFloat(idx), y: trayY)
@@ -99,7 +95,6 @@ final class ShapeMatchViewModel {
         pieces[idx].position = point
     }
 
-    /// Returns whether the drop landed on the piece's target.
     @discardableResult
     func endDrag(_ id: String) -> Bool {
         guard let idx = pieces.firstIndex(where: { $0.id == id }), !pieces[idx].placed else { return false }

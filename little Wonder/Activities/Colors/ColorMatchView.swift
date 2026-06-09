@@ -1,39 +1,32 @@
 import SwiftUI
 
-struct ShapeMatchView: View {
+struct ColorMatchView: View {
     @Environment(\.palette) private var palette
     @Environment(\.pace) private var pace
     @Environment(\.dismiss) private var dismiss
-    @Environment(ShapeProgressStore.self) private var progress
-    @State private var viewModel = ShapeMatchViewModel()
+    @Environment(ColorProgressStore.self) private var progress
+    @State private var viewModel = ColorMatchViewModel()
 
     var body: some View {
         ActivityStage(
-            kicker: "shapeMatchKicker",
-            title: "shapeMatchTitle",
-            prompt: "shapeMatchPrompt",
+            kicker: "colorMatchKicker",
+            title: "colorMatchTitle",
+            prompt: "colorMatchPrompt",
             progress: AnyView(ProgressDots(count: viewModel.total, active: viewModel.placedCount)),
             onClose: { dismiss() },
             onReset: { viewModel.reset() },
-            onSpeak: { /* TODO: wire AVSpeechSynthesizer */ }
+            onSpeak: { /* TODO: wire AVSpeechSynthesizer (Gate B) */ }
         ) {
             VStack(spacing: Spacing.md + 4) {
-                ShapeMatchCanvas(viewModel: viewModel)
-                ShapeMatchTray(viewModel: viewModel)
+                ColorMatchCanvas(viewModel: viewModel)
+                ColorMatchTray(viewModel: viewModel)
             }
             .task {
                 viewModel.onComplete = { [progress] in progress.recordMatch() }
             }
             .overlay(alignment: .top) {
                 if viewModel.celebrate {
-                    Text("shapeMatchCelebration")
-                        .font(.system(.headline, design: .serif).italic())
-                        .padding(.horizontal, 22)
-                        .padding(.vertical, 12)
-                        .background(palette.paperHi, in: .capsule)
-                        .overlay { Capsule().stroke(palette.line, lineWidth: 1) }
-                        .foregroundStyle(palette.ink)
-                        .transition(.scale.combined(with: .opacity))
+                    CelebrationBadge(text: "colorMatchCelebration")
                         .padding(.top, Spacing.md)
                 }
             }
@@ -42,28 +35,27 @@ struct ShapeMatchView: View {
     }
 }
 
-private struct ShapeMatchCanvas: View {
-    let viewModel: ShapeMatchViewModel
+private struct ColorMatchCanvas: View {
+    let viewModel: ColorMatchViewModel
 
-    @Environment(\.palette) private var palette
     @Environment(\.pace) private var pace
 
     var body: some View {
-        let logical = ShapeMatchViewModel.canvasSize
+        let logical = ColorMatchViewModel.canvasSize
         GeometryReader { proxy in
             let scale = min(proxy.size.width / logical.width, proxy.size.height / logical.height)
             ZStack(alignment: .topLeading) {
                 ForEach(viewModel.pieces) { piece in
-                    outline(for: piece)
+                    ColorMatchDropFrame(swatch: piece.swatch, placed: piece.placed)
                         .position(piece.target)
                 }
                 ForEach(viewModel.pieces) { piece in
-                    pieceView(piece)
+                    ColorMatchPiece(piece: piece, viewModel: viewModel)
                         .position(piece.position)
                 }
             }
             .frame(width: logical.width, height: logical.height)
-            .coordinateSpace(name: "matchStage")
+            .coordinateSpace(name: "colorMatchStage")
             .scaleEffect(scale, anchor: .topLeading)
             .frame(width: logical.width * scale, height: logical.height * scale, alignment: .topLeading)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
@@ -71,30 +63,18 @@ private struct ShapeMatchCanvas: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
-
-    private func outline(for piece: ShapeMatchViewModel.Piece) -> some View {
-        PrimitiveShape(kind: piece.kind, size: ShapeMatchViewModel.pieceSize, stroke: palette.line, strokeWidth: 3)
-            .opacity(piece.placed ? 0 : 1)
-            .animation(pace.fastAnimation, value: piece.placed)
-            .accessibilityHidden(true)
-    }
-
-    @ViewBuilder
-    private func pieceView(_ piece: ShapeMatchViewModel.Piece) -> some View {
-        ShapeMatchPiece(piece: piece, viewModel: viewModel)
-    }
 }
 
-private struct ShapeMatchPiece: View {
-    let piece: ShapeMatchViewModel.Piece
-    let viewModel: ShapeMatchViewModel
+private struct ColorMatchPiece: View {
+    let piece: ColorMatchViewModel.Piece
+    let viewModel: ColorMatchViewModel
 
     @Environment(\.palette) private var palette
     @Environment(\.pace) private var pace
     @State private var isDragging = false
 
     var body: some View {
-        PrimitiveShape(kind: piece.kind, size: ShapeMatchViewModel.pieceSize, fill: palette[keyPath: piece.color])
+        SwatchChip(swatch: piece.swatch, size: ColorMatchViewModel.pieceSize)
             .scaleEffect(isDragging ? 1.05 : 1)
             .shadow(color: palette.ink.opacity(isDragging ? 0.18 : 0.06),
                     radius: isDragging ? 18 : 6,
@@ -102,13 +82,13 @@ private struct ShapeMatchPiece: View {
             .gesture(dragGesture)
             .animation(pace.baseAnimation, value: piece.position)
             .animation(pace.fastAnimation, value: isDragging)
-            .accessibilityLabel(Text("shapeA11y \(piece.kind.rawValue)"))
+            .accessibilityLabel(piece.swatch.nameKey)
             .accessibilityAddTraits(.isButton)
-            .accessibilityValue(piece.placed ? Text("shapeMatchedA11y") : Text("shapePieceDraggingA11y"))
+            .accessibilityValue(piece.placed ? Text("colorMatchedA11y") : Text("colorPieceDraggingA11y"))
     }
 
     private var dragGesture: some Gesture {
-        DragGesture(minimumDistance: 0, coordinateSpace: .named("matchStage"))
+        DragGesture(minimumDistance: 0, coordinateSpace: .named("colorMatchStage"))
             .onChanged { value in
                 guard !piece.placed else { return }
                 isDragging = true
@@ -121,14 +101,29 @@ private struct ShapeMatchPiece: View {
     }
 }
 
-private struct ShapeMatchTray: View {
-    let viewModel: ShapeMatchViewModel
+/// The drop target: an outlined, faintly tinted frame in the matching colour.
+private struct ColorMatchDropFrame: View {
+    let swatch: ColorSwatch
+    let placed: Bool
+
+    @Environment(\.pace) private var pace
+
+    var body: some View {
+        SwatchTarget(swatch: swatch, size: ColorMatchViewModel.pieceSize, placed: placed)
+            .animation(pace.fastAnimation, value: placed)
+            .accessibilityLabel(swatch.nameKey)
+            .accessibilityValue(Text("colorMatchTargetA11y"))
+    }
+}
+
+private struct ColorMatchTray: View {
+    let viewModel: ColorMatchViewModel
 
     @Environment(\.palette) private var palette
 
     var body: some View {
         HStack {
-            Text("shapeTrayLabel")
+            Text("colorMatchTrayLabel")
                 .font(FontStack.mono)
                 .kerning(1.5)
                 .textCase(.uppercase)
@@ -146,5 +141,13 @@ private struct ShapeMatchTray: View {
             RoundedRectangle(cornerRadius: 24, style: .continuous)
                 .stroke(palette.line, lineWidth: 1)
         }
+    }
+}
+
+#Preview("Colour Match — warm") {
+    NavigationStack {
+        ColorMatchView()
+            .environment(\.palette, .warm)
+            .environment(ColorProgressStore())
     }
 }

@@ -3,31 +3,24 @@ import Foundation
 import Observation
 import SwiftUI
 
+/// Drag a colour chip onto the outlined frame of the same colour. Mirrors
+/// `NumberMatchViewModel`'s drag-snap mechanic, matching on `ColorSwatch`.
 @MainActor
 @Observable
-final class ShapeMatchViewModel {
+final class ColorMatchViewModel {
     struct Piece: Identifiable {
         let id: String
-        let kind: ShapeKind
-        let color: KeyPath<Palette, Color>
-        /// Center of the drop target in stage coordinates.
+        let swatch: ColorSwatch
+        /// Center of the drop target (outlined frame) in stage coordinates.
         let target: CGPoint
         /// Center of the tray slot the piece starts in.
         let traySlot: CGPoint
-        /// Current center of the piece.
         var position: CGPoint
         var placed: Bool
 
-        init(
-            id: String,
-            kind: ShapeKind,
-            color: KeyPath<Palette, Color>,
-            target: CGPoint,
-            traySlot: CGPoint
-        ) {
+        init(id: String, swatch: ColorSwatch, target: CGPoint, traySlot: CGPoint) {
             self.id = id
-            self.kind = kind
-            self.color = color
+            self.swatch = swatch
             self.target = target
             self.traySlot = traySlot
             self.position = traySlot
@@ -35,21 +28,10 @@ final class ShapeMatchViewModel {
         }
     }
 
-    /// Logical canvas the design uses (1100 × 820); render scaled.
     static let canvasSize = CGSize(width: 1100, height: 820)
     static let pieceSize: CGFloat = 180
     static let snapRadius: CGFloat = 90
 
-    static let eligibleKinds: [ShapeKind] = [
-        .circle, .square, .triangle, .star, .heart, .diamond, .hexagon
-    ]
-
-    static let paletteOptions: [KeyPath<Palette, Color>] = [
-        \Palette.terracotta, \Palette.oak, \Palette.sage,
-        \Palette.sky, \Palette.berry, \Palette.plum, \Palette.mustard
-    ]
-
-    /// Target anchors arranged so a single 130pt piece never overlaps the next.
     static let targetAnchors: [CGPoint] = [
         CGPoint(x: 240, y: 240),
         CGPoint(x: 540, y: 240),
@@ -61,7 +43,6 @@ final class ShapeMatchViewModel {
     private(set) var celebrate: Bool = false
     private var celebrationTask: Task<Void, Never>?
 
-    /// Fires once when the round transitions from in-progress to complete.
     var onComplete: (() -> Void)?
 
     var placedCount: Int { pieces.lazy.filter(\.placed).count }
@@ -74,8 +55,8 @@ final class ShapeMatchViewModel {
 
     static func randomPieces() -> [Piece] {
         let pieceCount = Int.random(in: 3...4)
-        let kinds = Array(eligibleKinds.shuffled().prefix(pieceCount))
-        let colors = Array(paletteOptions.shuffled().prefix(pieceCount))
+        // Distinct colours so each target's position maps unambiguously to one colour.
+        let swatches = Array(ColorSwatch.allCases.shuffled().prefix(pieceCount))
         let anchors = Array(targetAnchors.shuffled().prefix(pieceCount))
 
         let traySpacing: CGFloat = pieceSize + 40
@@ -83,13 +64,15 @@ final class ShapeMatchViewModel {
         let trayStartX = (canvasSize.width - trayWidth) / 2
         let trayY: CGFloat = 720
 
+        // Shuffle which tray slot each chip starts in, so chip order != target order.
+        let traySlots = (0..<pieceCount).map { CGPoint(x: trayStartX + traySpacing * CGFloat($0), y: trayY) }.shuffled()
+
         return (0..<pieceCount).map { idx in
             Piece(
-                id: "\(kinds[idx].rawValue)-\(idx)",
-                kind: kinds[idx],
-                color: colors[idx],
+                id: "\(swatches[idx].rawValue)-\(idx)",
+                swatch: swatches[idx],
                 target: anchors[idx],
-                traySlot: CGPoint(x: trayStartX + traySpacing * CGFloat(idx), y: trayY)
+                traySlot: traySlots[idx]
             )
         }
     }
@@ -99,7 +82,6 @@ final class ShapeMatchViewModel {
         pieces[idx].position = point
     }
 
-    /// Returns whether the drop landed on the piece's target.
     @discardableResult
     func endDrag(_ id: String) -> Bool {
         guard let idx = pieces.firstIndex(where: { $0.id == id }), !pieces[idx].placed else { return false }

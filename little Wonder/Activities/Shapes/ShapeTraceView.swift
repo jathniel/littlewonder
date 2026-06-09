@@ -3,6 +3,7 @@ import SwiftUI
 struct ShapeTraceView: View {
     @Environment(\.palette) private var palette
     @Environment(\.dismiss) private var dismiss
+    @Environment(ShapeProgressStore.self) private var progress
     @State private var viewModel = ShapeTraceViewModel()
 
     var body: some View {
@@ -19,6 +20,9 @@ struct ShapeTraceView: View {
                 ShapeTraceRail(viewModel: viewModel)
                     .frame(width: 180)
                 ShapeTraceBoard(viewModel: viewModel)
+            }
+            .task {
+                viewModel.onComplete = { [progress] in progress.recordTrace() }
             }
         }
     }
@@ -102,6 +106,8 @@ private struct ShapeTraceRailButton: View {
         case .triangle: "shapeKindTriangle"
         case .star:     "shapeKindStar"
         case .heart:    "shapeKindHeart"
+        case .diamond:  "shapeKindDiamond"
+        case .hexagon:  "shapeKindHexagon"
         default:        "shapeKindCircle"
         }
     }
@@ -118,7 +124,7 @@ private struct ShapeTraceBoard: View {
     var body: some View {
         GeometryReader { proxy in
             let scale = min(proxy.size.width / logical.width, proxy.size.height / logical.height)
-            let shapeRect = CGRect(x: 180, y: 60, width: 400, height: 420)
+            let shapeRect = CGRect(x: 180, y: 70, width: 400, height: 400)
             let dots = viewModel.dots(in: shapeRect)
 
             ZStack(alignment: .topLeading) {
@@ -177,15 +183,12 @@ private struct ShapeTraceBoard: View {
                     .frame(width: logical.width, height: logical.height, alignment: .topTrailing)
             }
             .frame(width: logical.width, height: logical.height)
-            .scaleEffect(scale, anchor: .topLeading)
-            .frame(width: logical.width * scale, height: logical.height * scale, alignment: .topLeading)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .contentShape(.rect)
+            .coordinateSpace(name: "traceStage")
             .gesture(
-                DragGesture(minimumDistance: 0)
+                DragGesture(minimumDistance: 0, coordinateSpace: .named("traceStage"))
                     .onChanged { value in
-                        let touchLogical = CGPoint(x: value.location.x / scale, y: value.location.y / scale)
-                        viewModel.progress(touch: touchLogical, dots: dots)
+                        viewModel.progress(touch: value.location, dots: dots)
                     }
                     .onEnded { _ in
                         if viewModel.filled == dots.count {
@@ -195,6 +198,9 @@ private struct ShapeTraceBoard: View {
                         }
                     }
             )
+            .scaleEffect(scale, anchor: .topLeading)
+            .frame(width: logical.width * scale, height: logical.height * scale, alignment: .topLeading)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(palette.paper)
             .clipShape(.rect(cornerRadius: 26, style: .continuous))
             .overlay {

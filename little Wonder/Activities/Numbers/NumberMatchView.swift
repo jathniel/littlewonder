@@ -1,39 +1,32 @@
 import SwiftUI
 
-struct ShapeMatchView: View {
+struct NumberMatchView: View {
     @Environment(\.palette) private var palette
     @Environment(\.pace) private var pace
     @Environment(\.dismiss) private var dismiss
-    @Environment(ShapeProgressStore.self) private var progress
-    @State private var viewModel = ShapeMatchViewModel()
+    @Environment(NumberProgressStore.self) private var progress
+    @State private var viewModel = NumberMatchViewModel()
 
     var body: some View {
         ActivityStage(
-            kicker: "shapeMatchKicker",
-            title: "shapeMatchTitle",
-            prompt: "shapeMatchPrompt",
+            kicker: "numberMatchKicker",
+            title: "numberMatchTitle",
+            prompt: "numberMatchPrompt",
             progress: AnyView(ProgressDots(count: viewModel.total, active: viewModel.placedCount)),
             onClose: { dismiss() },
             onReset: { viewModel.reset() },
             onSpeak: { /* TODO: wire AVSpeechSynthesizer */ }
         ) {
             VStack(spacing: Spacing.md + 4) {
-                ShapeMatchCanvas(viewModel: viewModel)
-                ShapeMatchTray(viewModel: viewModel)
+                NumberMatchCanvas(viewModel: viewModel)
+                NumberMatchTray(viewModel: viewModel)
             }
             .task {
                 viewModel.onComplete = { [progress] in progress.recordMatch() }
             }
             .overlay(alignment: .top) {
                 if viewModel.celebrate {
-                    Text("shapeMatchCelebration")
-                        .font(.system(.headline, design: .serif).italic())
-                        .padding(.horizontal, 22)
-                        .padding(.vertical, 12)
-                        .background(palette.paperHi, in: .capsule)
-                        .overlay { Capsule().stroke(palette.line, lineWidth: 1) }
-                        .foregroundStyle(palette.ink)
-                        .transition(.scale.combined(with: .opacity))
+                    CelebrationBadge(text: "numberMatchCelebration")
                         .padding(.top, Spacing.md)
                 }
             }
@@ -42,28 +35,28 @@ struct ShapeMatchView: View {
     }
 }
 
-private struct ShapeMatchCanvas: View {
-    let viewModel: ShapeMatchViewModel
+private struct NumberMatchCanvas: View {
+    let viewModel: NumberMatchViewModel
 
     @Environment(\.palette) private var palette
     @Environment(\.pace) private var pace
 
     var body: some View {
-        let logical = ShapeMatchViewModel.canvasSize
+        let logical = NumberMatchViewModel.canvasSize
         GeometryReader { proxy in
             let scale = min(proxy.size.width / logical.width, proxy.size.height / logical.height)
             ZStack(alignment: .topLeading) {
                 ForEach(viewModel.pieces) { piece in
-                    outline(for: piece)
+                    DotCard(count: piece.value, color: palette[keyPath: piece.color], placed: piece.placed)
                         .position(piece.target)
                 }
                 ForEach(viewModel.pieces) { piece in
-                    pieceView(piece)
+                    NumberMatchPiece(piece: piece, viewModel: viewModel)
                         .position(piece.position)
                 }
             }
             .frame(width: logical.width, height: logical.height)
-            .coordinateSpace(name: "matchStage")
+            .coordinateSpace(name: "numberMatchStage")
             .scaleEffect(scale, anchor: .topLeading)
             .frame(width: logical.width * scale, height: logical.height * scale, alignment: .topLeading)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
@@ -71,30 +64,18 @@ private struct ShapeMatchCanvas: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
-
-    private func outline(for piece: ShapeMatchViewModel.Piece) -> some View {
-        PrimitiveShape(kind: piece.kind, size: ShapeMatchViewModel.pieceSize, stroke: palette.line, strokeWidth: 3)
-            .opacity(piece.placed ? 0 : 1)
-            .animation(pace.fastAnimation, value: piece.placed)
-            .accessibilityHidden(true)
-    }
-
-    @ViewBuilder
-    private func pieceView(_ piece: ShapeMatchViewModel.Piece) -> some View {
-        ShapeMatchPiece(piece: piece, viewModel: viewModel)
-    }
 }
 
-private struct ShapeMatchPiece: View {
-    let piece: ShapeMatchViewModel.Piece
-    let viewModel: ShapeMatchViewModel
+private struct NumberMatchPiece: View {
+    let piece: NumberMatchViewModel.Piece
+    let viewModel: NumberMatchViewModel
 
     @Environment(\.palette) private var palette
     @Environment(\.pace) private var pace
     @State private var isDragging = false
 
     var body: some View {
-        PrimitiveShape(kind: piece.kind, size: ShapeMatchViewModel.pieceSize, fill: palette[keyPath: piece.color])
+        NumeralTile(value: piece.value, fill: palette[keyPath: piece.color], size: NumberMatchViewModel.pieceSize)
             .scaleEffect(isDragging ? 1.05 : 1)
             .shadow(color: palette.ink.opacity(isDragging ? 0.18 : 0.06),
                     radius: isDragging ? 18 : 6,
@@ -102,13 +83,13 @@ private struct ShapeMatchPiece: View {
             .gesture(dragGesture)
             .animation(pace.baseAnimation, value: piece.position)
             .animation(pace.fastAnimation, value: isDragging)
-            .accessibilityLabel(Text("shapeA11y \(piece.kind.rawValue)"))
+            .accessibilityLabel(Text("numberA11y \(piece.value)"))
             .accessibilityAddTraits(.isButton)
-            .accessibilityValue(piece.placed ? Text("shapeMatchedA11y") : Text("shapePieceDraggingA11y"))
+            .accessibilityValue(piece.placed ? Text("numberMatchedA11y") : Text("numberPieceDraggingA11y"))
     }
 
     private var dragGesture: some Gesture {
-        DragGesture(minimumDistance: 0, coordinateSpace: .named("matchStage"))
+        DragGesture(minimumDistance: 0, coordinateSpace: .named("numberMatchStage"))
             .onChanged { value in
                 guard !piece.placed else { return }
                 isDragging = true
@@ -121,14 +102,37 @@ private struct ShapeMatchPiece: View {
     }
 }
 
-private struct ShapeMatchTray: View {
-    let viewModel: ShapeMatchViewModel
+/// The drop target: a dashed card showing `count` dots.
+private struct DotCard: View {
+    let count: Int
+    let color: Color
+    let placed: Bool
+
+    @Environment(\.palette) private var palette
+    @Environment(\.pace) private var pace
+
+    var body: some View {
+        DotCluster(count: count, color: color, dotSize: 30)
+            .frame(width: NumberMatchViewModel.pieceSize, height: NumberMatchViewModel.pieceSize)
+            .background(palette.paperHi.opacity(placed ? 0 : 1), in: .rect(cornerRadius: 28, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: 28, style: .continuous)
+                    .stroke(palette.line, style: StrokeStyle(lineWidth: 2.5, dash: [8, 8]))
+                    .opacity(placed ? 0 : 1)
+            }
+            .animation(pace.fastAnimation, value: placed)
+            .accessibilityHidden(true)
+    }
+}
+
+private struct NumberMatchTray: View {
+    let viewModel: NumberMatchViewModel
 
     @Environment(\.palette) private var palette
 
     var body: some View {
         HStack {
-            Text("shapeTrayLabel")
+            Text("numberMatchTrayLabel")
                 .font(FontStack.mono)
                 .kerning(1.5)
                 .textCase(.uppercase)
@@ -146,5 +150,13 @@ private struct ShapeMatchTray: View {
             RoundedRectangle(cornerRadius: 24, style: .continuous)
                 .stroke(palette.line, lineWidth: 1)
         }
+    }
+}
+
+#Preview("Number Match — warm") {
+    NavigationStack {
+        NumberMatchView()
+            .environment(\.palette, .warm)
+            .environment(NumberProgressStore())
     }
 }
