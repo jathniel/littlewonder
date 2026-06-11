@@ -60,7 +60,7 @@ final class NumberMatchViewModel {
 
     var onComplete: (() -> Void)?
 
-    var placedCount: Int { pieces.lazy.filter(\.placed).count }
+    var placedCount: Int { pieces.count(where: \.placed) }
     var total: Int { pieces.count }
     var allPlaced: Bool { placedCount == total && total > 0 }
 

@@ -5,6 +5,7 @@ struct ColorMatchView: View {
     @Environment(\.pace) private var pace
     @Environment(\.dismiss) private var dismiss
     @Environment(ColorProgressStore.self) private var progress
+    @Environment(NarrationService.self) private var narration
     @State private var viewModel = ColorMatchViewModel()
 
     var body: some View {
@@ -12,10 +13,10 @@ struct ColorMatchView: View {
             kicker: "colorMatchKicker",
             title: "colorMatchTitle",
             prompt: "colorMatchPrompt",
-            progress: AnyView(ProgressDots(count: viewModel.total, active: viewModel.placedCount)),
+            progress: ProgressDots(count: viewModel.total, active: viewModel.placedCount),
             onClose: { dismiss() },
             onReset: { viewModel.reset() },
-            onSpeak: { /* TODO: wire AVSpeechSynthesizer (Gate B) */ }
+            onSpeak: { narration.speak(String(localized: "colorMatchPrompt")) }
         ) {
             VStack(spacing: Spacing.md + 4) {
                 ColorMatchCanvas(viewModel: viewModel)
@@ -31,6 +32,13 @@ struct ColorMatchView: View {
                 }
             }
             .animation(pace.longAnimation, value: viewModel.celebrate)
+            .sensoryFeedback(.impact, trigger: viewModel.placedCount)
+            .sensoryFeedback(.success, trigger: viewModel.celebrate)
+            .onChange(of: viewModel.celebrate) { _, celebrate in
+                if celebrate {
+                    narration.speak(String(localized: "colorMatchCelebration"))
+                }
+            }
         }
     }
 }
@@ -71,6 +79,7 @@ private struct ColorMatchPiece: View {
 
     @Environment(\.palette) private var palette
     @Environment(\.pace) private var pace
+    @Environment(NarrationService.self) private var narration
     @State private var isDragging = false
 
     var body: some View {
@@ -96,7 +105,10 @@ private struct ColorMatchPiece: View {
             }
             .onEnded { _ in
                 isDragging = false
-                _ = viewModel.endDrag(piece.id)
+                // The celebration line takes over when this was the final piece.
+                if viewModel.endDrag(piece.id), !viewModel.celebrate {
+                    narration.speak(piece.swatch.localizedName)
+                }
             }
     }
 }
@@ -149,5 +161,6 @@ private struct ColorMatchTray: View {
         ColorMatchView()
             .environment(\.palette, .warm)
             .environment(ColorProgressStore())
+            .environment(NarrationService(profile: ProfileStore()))
     }
 }

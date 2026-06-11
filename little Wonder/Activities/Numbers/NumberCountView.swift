@@ -5,6 +5,7 @@ struct NumberCountView: View {
     @Environment(\.pace) private var pace
     @Environment(\.dismiss) private var dismiss
     @Environment(NumberProgressStore.self) private var progress
+    @Environment(NarrationService.self) private var narration
     @State private var viewModel = NumberCountViewModel()
 
     var body: some View {
@@ -12,10 +13,10 @@ struct NumberCountView: View {
             kicker: "numberCountKicker",
             title: "numberCountTitle",
             prompt: "numberCountPrompt",
-            progress: AnyView(ProgressDots(count: viewModel.totalRounds, active: viewModel.completedRounds)),
+            progress: ProgressDots(count: viewModel.totalRounds, active: viewModel.completedRounds),
             onClose: { dismiss() },
             onReset: { viewModel.reset() },
-            onSpeak: { /* TODO: wire AVSpeechSynthesizer */ }
+            onSpeak: { narration.speak(String(localized: "numberCountPrompt")) }
         ) {
             VStack(spacing: Spacing.lg) {
                 NumberCountTally(viewModel: viewModel)
@@ -32,6 +33,13 @@ struct NumberCountView: View {
                 }
             }
             .animation(pace.longAnimation, value: viewModel.celebrate)
+            .sensoryFeedback(.impact, trigger: viewModel.countedCount)
+            .sensoryFeedback(.success, trigger: viewModel.celebrate)
+            .onChange(of: viewModel.celebrate) { _, celebrate in
+                if celebrate {
+                    narration.speak(String(localized: "numberCountCelebration"))
+                }
+            }
         }
     }
 }
@@ -78,10 +86,16 @@ private struct NumberCountDot: View {
 
     @Environment(\.palette) private var palette
     @Environment(\.pace) private var pace
+    @Environment(NarrationService.self) private var narration
 
     var body: some View {
         Button {
+            let isNewCount = !item.counted
             viewModel.tap(item.id)
+            // Count aloud; the celebration line takes over on the final dot.
+            if isNewCount, !viewModel.celebrate {
+                narration.speak(viewModel.countedCount.formatted(.number))
+            }
         } label: {
             PrimitiveShape(kind: .circle, size: 84, fill: palette.sky)
                 .opacity(item.counted ? 1 : 0.35)

@@ -145,6 +145,7 @@ private struct HomeHeader: View {
     let name: String
 
     @Environment(\.palette) private var palette
+    @ScaledMetric(relativeTo: .largeTitle) private var greetingSize = 56
 
     var body: some View {
         HStack(alignment: .bottom) {
@@ -156,18 +157,22 @@ private struct HomeHeader: View {
                     .foregroundStyle(palette.inkSoft)
 
                 Text(greeting)
-                    .font(.system(size: 56, weight: .regular, design: .serif))
+                    .font(.system(size: greetingSize, weight: .regular, design: .serif))
                     .kerning(-1.6)
                     .foregroundStyle(palette.ink)
             }
 
             Spacer()
 
+            // Favorites isn't wired up yet — keep it out of the accessibility
+            // tree so VoiceOver doesn't offer a control that does nothing.
             RoundIconButton(
                 label: "homeFavoritesButton",
                 systemImage: "star.fill",
                 size: 56
             ) { }
+            .disabled(true)
+            .accessibilityHidden(true)
         }
     }
 

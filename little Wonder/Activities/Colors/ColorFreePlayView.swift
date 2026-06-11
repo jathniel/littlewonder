@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ColorFreePlayView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(NarrationService.self) private var narration
     @State private var viewModel = ColorStampViewModel()
 
     var body: some View {
@@ -9,12 +10,13 @@ struct ColorFreePlayView: View {
             kicker: "colorFreePlayKicker",
             title: "colorFreePlayTitle",
             prompt: nil,
-            progress: AnyView(ProgressDots(count: 3, active: min(viewModel.pieceCount, 2))),
+            progress: ProgressDots(count: 3, active: min(viewModel.pieceCount, 2)),
             onClose: { dismiss() },
             onReset: { viewModel.reset() },
-            onSpeak: { /* TODO: wire AVSpeechSynthesizer (Gate B) */ }
+            onSpeak: { narration.speak(String(localized: "colorFreePlayTitle")) }
         ) {
             ColorStampBoard(viewModel: viewModel)
+                .sensoryFeedback(.impact, trigger: viewModel.pieceCount)
         }
     }
 }
@@ -23,5 +25,6 @@ struct ColorFreePlayView: View {
     NavigationStack {
         ColorFreePlayView()
             .environment(\.palette, .warm)
+            .environment(NarrationService(profile: ProfileStore()))
     }
 }

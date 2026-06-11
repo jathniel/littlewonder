@@ -4,10 +4,10 @@ import Testing
 
 @MainActor
 struct ShapeMatchViewModelTests {
-    @Test("Initial state — three pieces in tray, none placed")
+    @Test("Initial state — random roster of pieces in tray, none placed")
     func initialState() {
         let viewModel = ShapeMatchViewModel()
-        #expect(viewModel.pieces.count == 3)
+        #expect((3...4).contains(viewModel.pieces.count))
         #expect(viewModel.placedCount == 0)
         #expect(!viewModel.celebrate)
         for piece in viewModel.pieces {

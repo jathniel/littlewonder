@@ -25,7 +25,7 @@ final class NumberCountViewModel {
 
     var totalRounds: Int { roundCounts.count }
     var currentCount: Int { roundCounts[roundIndex] }
-    var countedCount: Int { items.lazy.filter(\.counted).count }
+    var countedCount: Int { items.count(where: \.counted) }
     var roundComplete: Bool { countedCount == items.count && !items.isEmpty }
     var isLastRound: Bool { roundIndex == roundCounts.count - 1 }
     /// Drives `ProgressDots` — number of fully finished rounds.

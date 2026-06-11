@@ -8,15 +8,16 @@ struct ProgressDots: View {
     @Environment(\.pace) private var pace
 
     var body: some View {
+        let model = ProgressDotsModel(count: count, active: active)
         HStack(spacing: Spacing.sm + 2) {
             ForEach(0..<count, id: \.self) { index in
                 Capsule()
-                    .fill(index == active ? palette.ink : palette.line)
-                    .frame(width: index == active ? 28 : 10, height: 10)
+                    .fill(index == model.highlightedIndex ? palette.ink : palette.line)
+                    .frame(width: index == model.highlightedIndex ? 28 : 10, height: 10)
             }
         }
         .animation(pace.baseAnimation, value: active)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(Text("progressDotsLabel \(active + 1) \(count)"))
+        .accessibilityLabel(Text("progressDotsLabel \(model.stepNumber) \(count)"))
     }
 }

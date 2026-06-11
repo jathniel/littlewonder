@@ -4,6 +4,7 @@ struct ShapeTraceView: View {
     @Environment(\.palette) private var palette
     @Environment(\.dismiss) private var dismiss
     @Environment(ShapeProgressStore.self) private var progress
+    @Environment(NarrationService.self) private var narration
     @State private var viewModel = ShapeTraceViewModel()
 
     var body: some View {
@@ -11,10 +12,10 @@ struct ShapeTraceView: View {
             kicker: "shapeTraceKicker",
             title: "shapeTraceTitle",
             prompt: "shapeTracePrompt",
-            progress: AnyView(ProgressDots(count: viewModel.shapes.count, active: viewModel.activeIndex)),
+            progress: ProgressDots(count: viewModel.shapes.count, active: viewModel.activeIndex),
             onClose: { dismiss() },
             onReset: { viewModel.reset() },
-            onSpeak: { /* TODO: AVSpeechSynthesizer */ }
+            onSpeak: { narration.speak(String(localized: "shapeTracePrompt")) }
         ) {
             HStack(spacing: 28) {
                 ShapeTraceRail(viewModel: viewModel)
@@ -23,6 +24,10 @@ struct ShapeTraceView: View {
             }
             .task {
                 viewModel.onComplete = { [progress] in progress.recordTrace() }
+            }
+            .sensoryFeedback(.impact, trigger: viewModel.completed)
+            .onChange(of: viewModel.activeShape) { _, shape in
+                narration.speak(shape.localizedName)
             }
         }
     }
@@ -76,7 +81,7 @@ private struct ShapeTraceRailButton: View {
             HStack(spacing: Spacing.sm + 2) {
                 PrimitiveShape(kind: kind, size: 28, fill: isActive ? palette.paperHi : palette.ink)
                     .frame(width: 28, height: 28)
-                Text(label)
+                Text(kind.nameKey)
                     .font(.system(.callout, design: .rounded).weight(.medium))
                     .foregroundStyle(isActive ? palette.paperHi : palette.ink)
                     .italic(isDone)
@@ -97,19 +102,6 @@ private struct ShapeTraceRailButton: View {
             }
         }
         .buttonStyle(.plain)
-    }
-
-    private var label: LocalizedStringKey {
-        switch kind {
-        case .circle:   "shapeKindCircle"
-        case .square:   "shapeKindSquare"
-        case .triangle: "shapeKindTriangle"
-        case .star:     "shapeKindStar"
-        case .heart:    "shapeKindHeart"
-        case .diamond:  "shapeKindDiamond"
-        case .hexagon:  "shapeKindHexagon"
-        default:        "shapeKindCircle"
-        }
     }
 }
 

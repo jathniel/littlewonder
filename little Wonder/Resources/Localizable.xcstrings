@@ -1881,6 +1881,39 @@
         }
       }
     },
+    "shapeKindOval" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "oval"
+          }
+        }
+      }
+    },
+    "shapeKindRectangle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "rectangle"
+          }
+        }
+      }
+    },
+    "shapeKindSemicircle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "semicircle"
+          }
+        }
+      }
+    },
     "shapeKindSquare" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2590,6 +2623,589 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "A quiet room\nfor little hands."
+          }
+        }
+      }
+    },
+    "animalRoomTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Animals"
+          }
+        }
+      }
+    },
+    "animalRoomBlurb" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Match shadows, sort by home, and find the animals."
+          }
+        }
+      }
+    },
+    "animalRoomFavoritesButton" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Animal goals"
+          }
+        }
+      }
+    },
+    "animalWeeklyKicker" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This week"
+          }
+        }
+      }
+    },
+    "animalWeeklyValueUnit" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "animals played"
+          }
+        }
+      }
+    },
+    "animalTileMatchTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shadow Match"
+          }
+        }
+      }
+    },
+    "animalTileMatchSubtitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Animal to shadow"
+          }
+        }
+      }
+    },
+    "animalTileSortTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sort"
+          }
+        }
+      }
+    },
+    "animalTileSortSubtitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Into habitats"
+          }
+        }
+      }
+    },
+    "animalTileFindTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Find"
+          }
+        }
+      }
+    },
+    "animalTileFindSubtitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spot the animal"
+          }
+        }
+      }
+    },
+    "animalTileFreePlayTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Free Play"
+          }
+        }
+      }
+    },
+    "animalTileFreePlaySubtitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Make a scene"
+          }
+        }
+      }
+    },
+    "animalMatchKicker" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Animals"
+          }
+        }
+      }
+    },
+    "animalMatchTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shadow match"
+          }
+        }
+      }
+    },
+    "animalMatchPrompt" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drag each animal onto its matching shadow."
+          }
+        }
+      }
+    },
+    "animalMatchCelebration" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Every shadow matched!"
+          }
+        }
+      }
+    },
+    "animalMatchTrayLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Animals"
+          }
+        }
+      }
+    },
+    "animalMatchedA11y" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Matched"
+          }
+        }
+      }
+    },
+    "animalPieceDraggingA11y" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drag me to my shadow"
+          }
+        }
+      }
+    },
+    "animalMatchTargetA11y" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drop the matching animal here"
+          }
+        }
+      }
+    },
+    "animalSortKicker" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Animals"
+          }
+        }
+      }
+    },
+    "animalSortTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sort by home"
+          }
+        }
+      }
+    },
+    "animalSortPrompt" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Flick each animal up into the home where it lives."
+          }
+        }
+      }
+    },
+    "animalSortCelebration" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Everyone's home!"
+          }
+        }
+      }
+    },
+    "animalSortBinInsideCount %lld" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld inside"
+          }
+        }
+      }
+    },
+    "animalSortTrayLabel %lld" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld to sort"
+          }
+        }
+      }
+    },
+    "animalSortPieceHintA11y" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Flick up to sort into its home"
+          }
+        }
+      }
+    },
+    "animalFindKicker" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Animals"
+          }
+        }
+      }
+    },
+    "animalFindTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Find the animal"
+          }
+        }
+      }
+    },
+    "animalFindPrompt" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap every one of the named animal."
+          }
+        }
+      }
+    },
+    "animalFindCelebration" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You found them all!"
+          }
+        }
+      }
+    },
+    "animalFindBannerKicker" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Find all the"
+          }
+        }
+      }
+    },
+    "animalFindBannerTitle %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@"
+          }
+        }
+      }
+    },
+    "animalFindNext" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Next"
+          }
+        }
+      }
+    },
+    "animalFoundA11y" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Found"
+          }
+        }
+      }
+    },
+    "animalFreePlayKicker" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Free play"
+          }
+        }
+      }
+    },
+    "animalFreePlayTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Animal scene"
+          }
+        }
+      }
+    },
+    "animalStampToyBoxKicker" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Animals"
+          }
+        }
+      }
+    },
+    "animalStampCanvasKicker %lld" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld animals"
+          }
+        }
+      }
+    },
+    "habitatNamePets" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Home"
+          }
+        }
+      }
+    },
+    "habitatNameBugs" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Garden"
+          }
+        }
+      }
+    },
+    "habitatNameWater" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Water"
+          }
+        }
+      }
+    },
+    "habitatNameWild" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wild"
+          }
+        }
+      }
+    },
+    "animalNameCat" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cat"
+          }
+        }
+      }
+    },
+    "animalNameDog" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dog"
+          }
+        }
+      }
+    },
+    "animalNameFish" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fish"
+          }
+        }
+      }
+    },
+    "animalNameBird" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bird"
+          }
+        }
+      }
+    },
+    "animalNameAnt" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ant"
+          }
+        }
+      }
+    },
+    "animalNameLadybug" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ladybug"
+          }
+        }
+      }
+    },
+    "animalNameTortoise" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tortoise"
+          }
+        }
+      }
+    },
+    "animalNameHare" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hare"
+          }
+        }
+      }
+    },
+    "animalNameLizard" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lizard"
           }
         }
       }

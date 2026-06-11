@@ -1,19 +1,18 @@
 import SwiftUI
 
 /// Reusable chrome for every shape activity board: toolbar + framed stage card + header.
-/// `progress` is typed as `AnyView` because each board hands in its own concrete
-/// progress configuration; this is the narrow exception called out in CLAUDE.md.
 struct ActivityStage<Content: View>: View {
     let kicker: LocalizedStringKey
     let title: LocalizedStringKey
     let prompt: LocalizedStringKey?
-    let progress: AnyView
+    let progress: ProgressDots
     let onClose: () -> Void
     let onReset: () -> Void
     let onSpeak: () -> Void
-    @ViewBuilder var content: () -> Content
+    @ViewBuilder let content: Content
 
     @Environment(\.palette) private var palette
+    @ScaledMetric(relativeTo: .largeTitle) private var titleSize = 44
 
     var body: some View {
         ZStack(alignment: .top) {
@@ -47,7 +46,7 @@ struct ActivityStage<Content: View>: View {
     private var stageCard: some View {
         VStack(alignment: .leading, spacing: 28) {
             header
-            content()
+            content
         }
         .padding(28)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
@@ -67,7 +66,7 @@ struct ActivityStage<Content: View>: View {
                     .textCase(.uppercase)
                     .foregroundStyle(palette.inkSoft)
                 Text(title)
-                    .font(.system(size: 44, weight: .regular, design: .serif))
+                    .font(.system(size: titleSize, weight: .regular, design: .serif))
                     .kerning(-1)
                     .foregroundStyle(palette.ink)
                     .fixedSize(horizontal: false, vertical: true)

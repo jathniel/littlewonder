@@ -5,6 +5,7 @@ struct ColorMixView: View {
     @Environment(\.pace) private var pace
     @Environment(\.dismiss) private var dismiss
     @Environment(ColorProgressStore.self) private var progress
+    @Environment(NarrationService.self) private var narration
     @State private var viewModel = ColorMixViewModel()
 
     var body: some View {
@@ -12,10 +13,10 @@ struct ColorMixView: View {
             kicker: "colorMixKicker",
             title: "colorMixTitle",
             prompt: "colorMixPrompt",
-            progress: AnyView(ProgressDots(count: viewModel.totalRounds, active: viewModel.completedRounds)),
+            progress: ProgressDots(count: viewModel.totalRounds, active: viewModel.completedRounds),
             onClose: { dismiss() },
             onReset: { viewModel.reset() },
-            onSpeak: { /* TODO: wire AVSpeechSynthesizer (Gate B) */ }
+            onSpeak: { narration.speak(String(localized: "colorMixPrompt")) }
         ) {
             VStack(spacing: Spacing.lg) {
                 ColorMixGoal(viewModel: viewModel)
@@ -33,6 +34,19 @@ struct ColorMixView: View {
                 }
             }
             .animation(pace.longAnimation, value: viewModel.celebrate)
+            .sensoryFeedback(.impact, trigger: viewModel.result)
+            .sensoryFeedback(.success, trigger: viewModel.celebrate)
+            .onChange(of: viewModel.result) { _, result in
+                // Name the blend in the well; the celebration line takes over on the last round.
+                if let result, !viewModel.celebrate {
+                    narration.speak(result.localizedName)
+                }
+            }
+            .onChange(of: viewModel.celebrate) { _, celebrate in
+                if celebrate {
+                    narration.speak(String(localized: "colorMixCelebration"))
+                }
+            }
         }
     }
 }
@@ -167,5 +181,6 @@ private struct ColorMixFooter: View {
         ColorMixView()
             .environment(\.palette, .warm)
             .environment(ColorProgressStore())
+            .environment(NarrationService(profile: ProfileStore()))
     }
 }

@@ -5,6 +5,7 @@ struct ShapeMatchView: View {
     @Environment(\.pace) private var pace
     @Environment(\.dismiss) private var dismiss
     @Environment(ShapeProgressStore.self) private var progress
+    @Environment(NarrationService.self) private var narration
     @State private var viewModel = ShapeMatchViewModel()
 
     var body: some View {
@@ -12,10 +13,10 @@ struct ShapeMatchView: View {
             kicker: "shapeMatchKicker",
             title: "shapeMatchTitle",
             prompt: "shapeMatchPrompt",
-            progress: AnyView(ProgressDots(count: viewModel.total, active: viewModel.placedCount)),
+            progress: ProgressDots(count: viewModel.total, active: viewModel.placedCount),
             onClose: { dismiss() },
             onReset: { viewModel.reset() },
-            onSpeak: { /* TODO: wire AVSpeechSynthesizer */ }
+            onSpeak: { narration.speak(String(localized: "shapeMatchPrompt")) }
         ) {
             VStack(spacing: Spacing.md + 4) {
                 ShapeMatchCanvas(viewModel: viewModel)
@@ -38,6 +39,13 @@ struct ShapeMatchView: View {
                 }
             }
             .animation(pace.longAnimation, value: viewModel.celebrate)
+            .sensoryFeedback(.impact, trigger: viewModel.placedCount)
+            .sensoryFeedback(.success, trigger: viewModel.celebrate)
+            .onChange(of: viewModel.celebrate) { _, celebrate in
+                if celebrate {
+                    narration.speak(String(localized: "shapeMatchCelebration"))
+                }
+            }
         }
     }
 }
@@ -91,6 +99,7 @@ private struct ShapeMatchPiece: View {
 
     @Environment(\.palette) private var palette
     @Environment(\.pace) private var pace
+    @Environment(NarrationService.self) private var narration
     @State private var isDragging = false
 
     var body: some View {
@@ -116,7 +125,10 @@ private struct ShapeMatchPiece: View {
             }
             .onEnded { _ in
                 isDragging = false
-                _ = viewModel.endDrag(piece.id)
+                // The celebration line takes over when this was the final piece.
+                if viewModel.endDrag(piece.id), !viewModel.celebrate {
+                    narration.speak(piece.kind.localizedName)
+                }
             }
     }
 }

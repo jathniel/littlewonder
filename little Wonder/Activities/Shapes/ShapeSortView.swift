@@ -3,6 +3,7 @@ import SwiftUI
 struct ShapeSortView: View {
     @Environment(\.palette) private var palette
     @Environment(\.dismiss) private var dismiss
+    @Environment(NarrationService.self) private var narration
     @State private var viewModel = ShapeSortViewModel()
 
     var body: some View {
@@ -10,15 +11,16 @@ struct ShapeSortView: View {
             kicker: "shapeSortKicker",
             title: "shapeSortTitle",
             prompt: "shapeSortPrompt",
-            progress: AnyView(ProgressDots(count: 3, active: max(0, 3 - viewModel.remaining))),
+            progress: ProgressDots(count: 3, active: max(0, 3 - viewModel.remaining)),
             onClose: { dismiss() },
             onReset: { viewModel.reset() },
-            onSpeak: { /* TODO: AVSpeechSynthesizer */ }
+            onSpeak: { narration.speak(String(localized: "shapeSortPrompt")) }
         ) {
             VStack(spacing: Spacing.lg) {
                 ShapeSortBins(bins: viewModel.bins)
                 ShapeSortTray(viewModel: viewModel)
             }
+            .sensoryFeedback(.impact, trigger: viewModel.remaining)
         }
     }
 }
@@ -100,6 +102,7 @@ private struct ShapeSortTray: View {
 
     @Environment(\.palette) private var palette
     @Environment(\.pace) private var pace
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var nudgePhase: CGFloat = -4
 
     var body: some View {
@@ -129,6 +132,7 @@ private struct ShapeSortTray: View {
                 .stroke(palette.line, lineWidth: 1)
         }
         .onAppear {
+            guard !reduceMotion else { return }
             withAnimation(.easeInOut(duration: 1.2).repeatForever(autoreverses: true)) {
                 nudgePhase = -16
             }
@@ -144,8 +148,8 @@ private struct ShapeSortTrayPiece: View {
 
     @Environment(\.palette) private var palette
     @Environment(\.pace) private var pace
+    @Environment(NarrationService.self) private var narration
     @State private var dragOffset: CGSize = .zero
-    @State private var isDragging = false
 
     var body: some View {
         ZStack(alignment: .top) {
@@ -169,15 +173,17 @@ private struct ShapeSortTrayPiece: View {
     private var dragGesture: some Gesture {
         DragGesture()
             .onChanged { value in
-                isDragging = true
                 dragOffset = value.translation
             }
             .onEnded { value in
-                isDragging = false
                 // Treat any upward fling (>= 90pt) as a "drop into bin" gesture for v1.
                 if value.translation.height < -90 {
+                    var didPlace = false
                     withAnimation(pace.baseAnimation) {
-                        _ = viewModel.place(pieceID: piece.id)
+                        didPlace = viewModel.place(pieceID: piece.id)
+                    }
+                    if didPlace {
+                        narration.speak(piece.kind.localizedName)
                     }
                 }
                 withAnimation(pace.baseAnimation) {

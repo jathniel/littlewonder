@@ -5,6 +5,7 @@ struct ColorSortView: View {
     @Environment(\.pace) private var pace
     @Environment(\.dismiss) private var dismiss
     @Environment(ColorProgressStore.self) private var progress
+    @Environment(NarrationService.self) private var narration
     @State private var viewModel = ColorSortViewModel()
 
     var body: some View {
@@ -12,10 +13,10 @@ struct ColorSortView: View {
             kicker: "colorSortKicker",
             title: "colorSortTitle",
             prompt: "colorSortPrompt",
-            progress: AnyView(ProgressDots(count: viewModel.total, active: viewModel.total - viewModel.remaining)),
+            progress: ProgressDots(count: viewModel.total, active: viewModel.total - viewModel.remaining),
             onClose: { dismiss() },
             onReset: { viewModel.reset() },
-            onSpeak: { /* TODO: wire AVSpeechSynthesizer (Gate B) */ }
+            onSpeak: { narration.speak(String(localized: "colorSortPrompt")) }
         ) {
             VStack(spacing: Spacing.lg) {
                 ColorSortBins(bins: viewModel.bins)
@@ -31,6 +32,13 @@ struct ColorSortView: View {
                 }
             }
             .animation(pace.longAnimation, value: viewModel.celebrate)
+            .sensoryFeedback(.impact, trigger: viewModel.remaining)
+            .sensoryFeedback(.success, trigger: viewModel.celebrate)
+            .onChange(of: viewModel.celebrate) { _, celebrate in
+                if celebrate {
+                    narration.speak(String(localized: "colorSortCelebration"))
+                }
+            }
         }
     }
 }
@@ -114,6 +122,7 @@ private struct ColorSortTray: View {
     let viewModel: ColorSortViewModel
 
     @Environment(\.palette) private var palette
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var nudgePhase: CGFloat = -4
 
     var body: some View {
@@ -143,6 +152,7 @@ private struct ColorSortTray: View {
                 .stroke(palette.line, lineWidth: 1)
         }
         .onAppear {
+            guard !reduceMotion else { return }
             withAnimation(.easeInOut(duration: 1.2).repeatForever(autoreverses: true)) {
                 nudgePhase = -16
             }
@@ -158,8 +168,8 @@ private struct ColorSortTrayPiece: View {
 
     @Environment(\.palette) private var palette
     @Environment(\.pace) private var pace
+    @Environment(NarrationService.self) private var narration
     @State private var dragOffset: CGSize = .zero
-    @State private var isDragging = false
 
     var body: some View {
         ZStack(alignment: .top) {
@@ -184,15 +194,18 @@ private struct ColorSortTrayPiece: View {
     private var dragGesture: some Gesture {
         DragGesture()
             .onChanged { value in
-                isDragging = true
                 dragOffset = value.translation
             }
             .onEnded { value in
-                isDragging = false
                 // Treat any upward fling (>= 90pt) as a "drop into bin" gesture.
                 if value.translation.height < -90 {
+                    var didPlace = false
                     withAnimation(pace.baseAnimation) {
-                        _ = viewModel.place(pieceID: piece.id)
+                        didPlace = viewModel.place(pieceID: piece.id)
+                    }
+                    // The celebration line takes over when this emptied the tray.
+                    if didPlace, !viewModel.celebrate {
+                        narration.speak(piece.swatch.localizedName)
                     }
                 }
                 withAnimation(pace.baseAnimation) {
@@ -207,5 +220,6 @@ private struct ColorSortTrayPiece: View {
         ColorSortView()
             .environment(\.palette, .warm)
             .environment(ColorProgressStore())
+            .environment(NarrationService(profile: ProfileStore()))
     }
 }

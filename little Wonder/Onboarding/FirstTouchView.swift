@@ -73,11 +73,15 @@ private struct FirstTouchFooter: View {
     var body: some View {
         HStack {
             HStack(spacing: Spacing.sm + 4) {
+                // Narration isn't wired up yet (Gate B) — keep it out of the
+                // accessibility tree so VoiceOver doesn't offer a dead control.
                 RoundIconButton(
                     label: "audioToggle",
                     systemImage: "speaker.wave.2.fill",
                     size: 48
                 ) { }
+                .disabled(true)
+                .accessibilityHidden(true)
                 Text("firstTouchHint")
                     .font(.subheadline.weight(.medium))
                     .foregroundStyle(palette.inkSoft)

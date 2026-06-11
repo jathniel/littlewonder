@@ -5,6 +5,7 @@ struct ColorFindView: View {
     @Environment(\.pace) private var pace
     @Environment(\.dismiss) private var dismiss
     @Environment(ColorProgressStore.self) private var progress
+    @Environment(NarrationService.self) private var narration
     @State private var viewModel = ColorFindViewModel()
 
     var body: some View {
@@ -12,10 +13,10 @@ struct ColorFindView: View {
             kicker: "colorFindKicker",
             title: "colorFindTitle",
             prompt: "colorFindPrompt",
-            progress: AnyView(ProgressDots(count: viewModel.totalRounds, active: viewModel.completedRounds)),
+            progress: ProgressDots(count: viewModel.totalRounds, active: viewModel.completedRounds),
             onClose: { dismiss() },
             onReset: { viewModel.reset() },
-            onSpeak: { /* TODO: wire AVSpeechSynthesizer (Gate B) */ }
+            onSpeak: { narration.speak(String(localized: "colorFindPrompt")) }
         ) {
             VStack(spacing: Spacing.lg) {
                 ColorFindBanner(viewModel: viewModel)
@@ -32,6 +33,16 @@ struct ColorFindView: View {
                 }
             }
             .animation(pace.longAnimation, value: viewModel.celebrate)
+            .sensoryFeedback(.impact, trigger: viewModel.foundCount)
+            .sensoryFeedback(.success, trigger: viewModel.celebrate)
+            .onChange(of: viewModel.roundIndex) { _, _ in
+                narration.speak(viewModel.target.localizedName)
+            }
+            .onChange(of: viewModel.celebrate) { _, celebrate in
+                if celebrate {
+                    narration.speak(String(localized: "colorFindCelebration"))
+                }
+            }
         }
     }
 }
@@ -91,10 +102,16 @@ private struct ColorFindChip: View {
 
     @Environment(\.palette) private var palette
     @Environment(\.pace) private var pace
+    @Environment(NarrationService.self) private var narration
 
     var body: some View {
         Button {
+            let isNewFind = item.swatch == viewModel.target && !item.found
             viewModel.tap(item.id)
+            // The celebration line takes over when this was the final find.
+            if isNewFind, !viewModel.celebrate {
+                narration.speak(item.swatch.localizedName)
+            }
         } label: {
             SwatchChip(swatch: item.swatch, size: 84)
                 .opacity(item.found ? 0.4 : 1)
@@ -136,5 +153,6 @@ private struct ColorFindFooter: View {
         ColorFindView()
             .environment(\.palette, .warm)
             .environment(ColorProgressStore())
+            .environment(NarrationService(profile: ProfileStore()))
     }
 }

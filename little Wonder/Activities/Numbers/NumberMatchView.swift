@@ -5,6 +5,7 @@ struct NumberMatchView: View {
     @Environment(\.pace) private var pace
     @Environment(\.dismiss) private var dismiss
     @Environment(NumberProgressStore.self) private var progress
+    @Environment(NarrationService.self) private var narration
     @State private var viewModel = NumberMatchViewModel()
 
     var body: some View {
@@ -12,10 +13,10 @@ struct NumberMatchView: View {
             kicker: "numberMatchKicker",
             title: "numberMatchTitle",
             prompt: "numberMatchPrompt",
-            progress: AnyView(ProgressDots(count: viewModel.total, active: viewModel.placedCount)),
+            progress: ProgressDots(count: viewModel.total, active: viewModel.placedCount),
             onClose: { dismiss() },
             onReset: { viewModel.reset() },
-            onSpeak: { /* TODO: wire AVSpeechSynthesizer */ }
+            onSpeak: { narration.speak(String(localized: "numberMatchPrompt")) }
         ) {
             VStack(spacing: Spacing.md + 4) {
                 NumberMatchCanvas(viewModel: viewModel)
@@ -31,6 +32,13 @@ struct NumberMatchView: View {
                 }
             }
             .animation(pace.longAnimation, value: viewModel.celebrate)
+            .sensoryFeedback(.impact, trigger: viewModel.placedCount)
+            .sensoryFeedback(.success, trigger: viewModel.celebrate)
+            .onChange(of: viewModel.celebrate) { _, celebrate in
+                if celebrate {
+                    narration.speak(String(localized: "numberMatchCelebration"))
+                }
+            }
         }
     }
 }
@@ -72,6 +80,7 @@ private struct NumberMatchPiece: View {
 
     @Environment(\.palette) private var palette
     @Environment(\.pace) private var pace
+    @Environment(NarrationService.self) private var narration
     @State private var isDragging = false
 
     var body: some View {
@@ -97,7 +106,10 @@ private struct NumberMatchPiece: View {
             }
             .onEnded { _ in
                 isDragging = false
-                _ = viewModel.endDrag(piece.id)
+                // The celebration line takes over when this was the final piece.
+                if viewModel.endDrag(piece.id), !viewModel.celebrate {
+                    narration.speak(piece.value.formatted(.number))
+                }
             }
     }
 }
@@ -158,5 +170,6 @@ private struct NumberMatchTray: View {
         NumberMatchView()
             .environment(\.palette, .warm)
             .environment(NumberProgressStore())
+            .environment(NarrationService(profile: ProfileStore()))
     }
 }

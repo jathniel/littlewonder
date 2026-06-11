@@ -5,6 +5,7 @@ struct NumberOrderView: View {
     @Environment(\.pace) private var pace
     @Environment(\.dismiss) private var dismiss
     @Environment(NumberProgressStore.self) private var progress
+    @Environment(NarrationService.self) private var narration
     @State private var viewModel = NumberOrderViewModel()
 
     var body: some View {
@@ -12,10 +13,10 @@ struct NumberOrderView: View {
             kicker: "numberOrderKicker",
             title: "numberOrderTitle",
             prompt: "numberOrderPrompt",
-            progress: AnyView(ProgressDots(count: viewModel.total, active: viewModel.placedCount)),
+            progress: ProgressDots(count: viewModel.total, active: viewModel.placedCount),
             onClose: { dismiss() },
             onReset: { viewModel.reset() },
-            onSpeak: { /* TODO: wire AVSpeechSynthesizer */ }
+            onSpeak: { narration.speak(String(localized: "numberOrderPrompt")) }
         ) {
             VStack(spacing: Spacing.xl) {
                 NumberOrderSlots(viewModel: viewModel)
@@ -31,6 +32,13 @@ struct NumberOrderView: View {
                 }
             }
             .animation(pace.longAnimation, value: viewModel.celebrate)
+            .sensoryFeedback(.impact, trigger: viewModel.placedCount)
+            .sensoryFeedback(.success, trigger: viewModel.celebrate)
+            .onChange(of: viewModel.celebrate) { _, celebrate in
+                if celebrate {
+                    narration.speak(String(localized: "numberOrderCelebration"))
+                }
+            }
         }
     }
 }
@@ -122,12 +130,18 @@ private struct NumberOrderTrayTile: View {
 
     @Environment(\.palette) private var palette
     @Environment(\.pace) private var pace
+    @Environment(NarrationService.self) private var narration
     @State private var wiggle = false
 
     var body: some View {
         Button {
             let placed = viewModel.place(number.value)
-            if !placed {
+            if placed {
+                // The celebration line takes over when this was the final number.
+                if !viewModel.celebrate {
+                    narration.speak(number.value.formatted(.number))
+                }
+            } else {
                 withAnimation(pace.fastAnimation) { wiggle = true }
                 Task { @MainActor in
                     try? await Task.sleep(for: .milliseconds(180))

@@ -40,6 +40,18 @@ enum ColorSwatch: String, CaseIterable, Hashable, Identifiable, Sendable {
         }
     }
 
+    /// The colour name as a plain string, for narration.
+    var localizedName: String {
+        switch self {
+        case .red:    String(localized: "colorNameRed")
+        case .yellow: String(localized: "colorNameYellow")
+        case .blue:   String(localized: "colorNameBlue")
+        case .green:  String(localized: "colorNameGreen")
+        case .orange: String(localized: "colorNameOrange")
+        case .purple: String(localized: "colorNamePurple")
+        }
+    }
+
     var isPrimary: Bool {
         switch self {
         case .red, .yellow, .blue: true

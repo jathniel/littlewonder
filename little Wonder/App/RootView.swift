@@ -6,6 +6,7 @@ struct RootView: View {
     @State private var shapeProgress = ShapeProgressStore()
     @State private var numberProgress = NumberProgressStore()
     @State private var colorProgress = ColorProgressStore()
+    @State private var animalProgress = AnimalProgressStore()
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -24,6 +25,8 @@ struct RootView: View {
                     NumbersRoomView(path: $path)
                 case .colors:
                     ColorsRoomView(path: $path)
+                case .animals:
+                    AnimalsRoomView(path: $path)
                 default:
                     TopicPlaceholderView(topic: topic)
                 }
@@ -54,9 +57,18 @@ struct RootView: View {
                 case .freePlay: ColorFreePlayView()
                 }
             }
+            .navigationDestination(for: AnimalActivityID.self) { activity in
+                switch activity {
+                case .match:    AnimalMatchView()
+                case .sort:     AnimalSortView()
+                case .find:     AnimalFindView()
+                case .freePlay: AnimalFreePlayView()
+                }
+            }
         }
         .environment(shapeProgress)
         .environment(numberProgress)
         .environment(colorProgress)
+        .environment(animalProgress)
     }
 }

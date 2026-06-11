@@ -6,9 +6,9 @@ import Testing
 struct ShapeTraceViewModelTests {
     private let rect = CGRect(x: 0, y: 0, width: 200, height: 200)
 
-    @Test("Initial state — circle active, zero dots filled")
+    @Test("Initial state — first roster shape active, zero dots filled")
     func initialState() {
-        let viewModel = ShapeTraceViewModel()
+        let viewModel = ShapeTraceViewModel(shapes: [.circle, .square, .triangle, .star])
         #expect(viewModel.activeShape == .circle)
         #expect(viewModel.activeIndex == 0)
         #expect(viewModel.filled == 0)
@@ -16,11 +16,13 @@ struct ShapeTraceViewModelTests {
 
     @Test("Touching the next dot advances filled")
     func progressAdvances() {
-        let viewModel = ShapeTraceViewModel()
+        // Pinned roster and a radius smaller than half the circle's dot spacing
+        // (~34.9pt here) so each touch fills exactly one dot.
+        let viewModel = ShapeTraceViewModel(shapes: [.circle, .square, .triangle, .star])
         let dots = viewModel.dots(in: rect)
-        viewModel.progress(touch: dots[0], dots: dots)
+        viewModel.progress(touch: dots[0], dots: dots, radius: 17)
         #expect(viewModel.filled == 1)
-        viewModel.progress(touch: dots[1], dots: dots)
+        viewModel.progress(touch: dots[1], dots: dots, radius: 17)
         #expect(viewModel.filled == 2)
     }
 
@@ -47,7 +49,8 @@ struct ShapeTraceViewModelTests {
 
     @Test("Selecting a shape resets fill counter")
     func selectShape() {
-        let viewModel = ShapeTraceViewModel()
+        // Pinned roster: selecting a shape only works when it is in the roster.
+        let viewModel = ShapeTraceViewModel(shapes: [.circle, .square, .triangle, .star])
         let dots = viewModel.dots(in: rect)
         viewModel.progress(touch: dots[0], dots: dots)
         viewModel.selectShape(.triangle)

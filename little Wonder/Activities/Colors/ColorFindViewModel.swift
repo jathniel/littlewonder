@@ -29,8 +29,8 @@ final class ColorFindViewModel {
 
     var totalRounds: Int { targets.count }
     var target: ColorSwatch { targets[roundIndex] }
-    var matchTotal: Int { items.lazy.filter { $0.swatch == self.target }.count }
-    var foundCount: Int { items.lazy.filter(\.found).count }
+    var matchTotal: Int { items.count(where: { $0.swatch == self.target }) }
+    var foundCount: Int { items.count(where: \.found) }
     var roundComplete: Bool { foundCount == matchTotal && matchTotal > 0 }
     var isLastRound: Bool { roundIndex == targets.count - 1 }
     /// Drives `ProgressDots` — number of fully finished rounds.
